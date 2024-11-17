@@ -23,10 +23,13 @@
                     <option value="ano">Ano</option>
                 </select>
             </div>
+
+            <!-- Botão Limpar Filtros -->
+            <button v-if="filtroOrdem || filtroPeriodo" @click="clearFilters" class="clear-filters-btn">Limpar Filtros</button>
         </div>
 
         <!-- Indicadores -->
-        <div class="indicadores">
+        <div class="indicadores" v-if="!loading">
             <div class="card" v-for="indicador in indicadoresFiltrados" :key="indicador.ordem">
                 <h3>Ordem de Produção: {{ indicador.ordem }}</h3>
                 <div class="indicator">
@@ -42,6 +45,10 @@
                     <span class="indicator-value">{{ indicador.rendimento.toFixed(2) }}%</span>
                 </div>
             </div>
+        </div>
+
+        <div v-else class="loading-spinner">
+            <span>Carregando dados...</span>
         </div>
 
         <!-- Comparação -->
@@ -64,9 +71,12 @@ export default {
             chartData: null, // Dados para o gráfico
             filtroOrdem: "", // Filtro de ordem
             filtroPeriodo: "", // Filtro de período
+            loading: false, // Indicador de carregamento
+            error: null, // Mensagem de erro
         };
     },
     computed: {
+        // Filtra os indicadores com base nos filtros de Ordem de Produção e Período
         indicadoresFiltrados() {
             let filtrados = this.indicadores;
 
@@ -124,7 +134,14 @@ export default {
         formatDate(year, month, day) {
             return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         },
+        clearFilters() {
+            this.filtroOrdem = "";
+            this.filtroPeriodo = "";
+        },
         async fetchData() {
+            this.loading = true;
+            this.error = null;
+
             try {
                 const [materiaPrimaResponse, concentradoResponse] = await Promise.all([
                     axios.get("http://localhost:3000/api/get_soma_materia_prima"),
@@ -168,22 +185,57 @@ export default {
                 }));
 
                 this.indicadores = indicadores;
-
-                this.chartData = {
-                    labels: indicadores.map((i) => i.ordem),
-                    datasets: [
-                        {
-                            label: "Rendimento (%)",
-                            data: indicadores.map((i) => i.rendimento),
-                            borderColor: "rgba(75, 192, 192, 1)",
-                            borderWidth: 2,
-                            fill: false,
-                        },
-                    ],
-                };
+                this.updateChart();
             } catch (error) {
-                console.error("Erro ao buscar dados:", error);
+                this.error = "Erro ao carregar os dados, tente novamente mais tarde.";
+                console.error(error);
+            } finally {
+                this.loading = false;
             }
+        },
+        updateChart() {
+    const indicadores = this.indicadoresFiltrados;
+
+    if (this.filtroOrdem) {
+        // Exibir gráfico de barra (coluna) para uma única ordem
+        const indicador = indicadores[0]; // Como é uma única ordem, assumimos que há só um item no array
+
+        this.chartData = {
+            labels: ["Matéria-prima", "Concentrado"],
+            datasets: [
+                {
+                    label: `Ordem ${indicador.ordem}`,
+                    data: [indicador.materiaPrima, indicador.concentrado],
+                    backgroundColor: ["#FF8C00", "#4CAF50"],
+                    borderColor: ["#FF7F00", "#388E3C"],
+                    borderWidth: 1,
+                },
+            ],
+        };
+    } else {
+        // Exibir gráfico de linha para múltiplas ordens
+        this.chartData = {
+            labels: indicadores.map((i) => i.ordem),
+            datasets: [
+                {
+                    label: "Rendimento (%)",
+                    data: indicadores.map((i) => i.rendimento),
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    borderWidth: 2,
+                    fill: false,
+                },
+            ],
+        };
+    }
+}
+,
+    },
+    watch: {
+        filtroOrdem() {
+            this.updateChart();
+        },
+        filtroPeriodo() {
+            this.updateChart();
         },
     },
     mounted() {
@@ -323,5 +375,26 @@ h3 {
         width: 100%;
         max-width: 400px;
     }
+}
+
+/* Loading */
+.loading-spinner {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #0056b3;
+}
+
+.clear-filters-btn {
+    background-color: #ff4d4d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    border: none;
+}
+
+.clear-filters-btn:hover {
+    background-color: #ff1a1a;
 }
 </style>
