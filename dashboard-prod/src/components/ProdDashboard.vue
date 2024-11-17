@@ -1,9 +1,10 @@
 <template>
     <div class="dashboard">
         <header class="dashboard-header">
-            <h1 class="dashboard-title">Dashboard de Produção</h1>
+            <h1 class="dashboard-title">Dashboard de Produção Nutrilite</h1>
             <p class="dashboard-description">
-                Acompanhe o desempenho da produção com dados atualizados sobre matéria-prima, concentrado e rendimento. Selecione as ordens de produção para analisar e comparar os resultados.
+                Acompanhe o desempenho da produção com dados atualizados sobre matéria-prima, concentrado e rendimento.
+                Selecione as ordens de produção para analisar e comparar os resultados.
             </p>
         </header>
 
@@ -17,7 +18,8 @@
                         Ordem {{ indicador.ordem }}
                     </label>
                 </div>
-                <button v-if="filtroOrdemSelecionadas.length > 0" @click="clearFilters" class="clear-filters-btn">Limpar Filtros</button>
+                <button v-if="filtroOrdemSelecionadas.length > 0" @click="clearFilters" class="clear-filters-btn">Limpar
+                    Filtros</button>
             </div>
 
             <!-- Conteúdo principal -->
@@ -215,47 +217,46 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos gerais */
-.dashboard {
-    font-family: 'Roboto', sans-serif;
-    color: #333;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
 }
 
 .dashboard-header {
+    background: linear-gradient(135deg, #4db8ff, #2f4e7d);
+    border-radius: 10px;
+    color: white;
+    padding: 40px 20px;
     text-align: center;
-    margin-bottom: 40px;
 }
 
 .dashboard-title {
-    font-size: 2.5rem;
-    color: #0056b3;
-    margin-bottom: 10px;
+    font-size: 3rem;
+    font-weight: 600;
 }
 
 .dashboard-description {
-    font-size: 1rem;
-    color: #666;
-    max-width: 800px;
-    margin: 0 auto;
+    font-size: 1.2rem;
+    color: #dfe7f0;
 }
 
 /* Barra lateral */
 .sidebar {
     width: 250px;
     float: left;
-    padding: 20px;
-    background-color: #f9f9f9;
+    margin-top: 20px;
+    background-color: #0056b3;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    color: white;
 }
 
 h3 {
     font-size: 1.2rem;
-    color: #0056b3;
-    margin-bottom: 15px;
+    margin: 10px;
 }
 
 .order-list {
@@ -269,9 +270,10 @@ h3 {
 }
 
 .clear-filters-btn {
-    padding: 8px 15px;
-    background-color: #f44336;
-    color: #fff;
+    margin: 10px;
+    padding: 10px;
+    background-color: white;
+    color: #0056b3;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -279,7 +281,7 @@ h3 {
 }
 
 .clear-filters-btn:hover {
-    background-color: #d32f2f;
+    background-color: #4db8ff;
 }
 
 /* Conteúdo principal */
@@ -299,10 +301,7 @@ h2 {
 }
 
 .data-table {
-    background-color: #fff;
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 table {
@@ -311,7 +310,8 @@ table {
     margin-top: 20px;
 }
 
-th, td {
+th,
+td {
     padding: 12px;
     text-align: center;
     border: 1px solid #ddd;
