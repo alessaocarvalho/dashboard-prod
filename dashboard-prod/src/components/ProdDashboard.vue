@@ -67,18 +67,15 @@ export default {
         };
     },
     computed: {
-        // Filtra os indicadores com base nos filtros de Ordem de Produção e Período
         indicadoresFiltrados() {
             let filtrados = this.indicadores;
 
-            // Filtra por Ordem de Produção
             if (this.filtroOrdem) {
                 filtrados = filtrados.filter(
                     (indicador) => indicador.ordem === this.filtroOrdem
                 );
             }
 
-            // Filtra por Período
             if (this.filtroPeriodo) {
                 const now = new Date();
                 filtrados = filtrados.filter((indicador) => {
@@ -100,36 +97,70 @@ export default {
         },
     },
     methods: {
-        // Busca e processa os dados da API
+        normalizeKeys(obj) {
+            return Object.keys(obj).reduce((acc, key) => {
+                const cleanKey = key.trim().replace(/^\uFEFF/, ""); // Remove caracteres invisíveis
+                acc[cleanKey] = obj[key];
+                return acc;
+            }, {});
+        },
+        getNumericMonth(monthName) {
+            const monthMap = {
+                janeiro: 1,
+                fevereiro: 2,
+                março: 3,
+                abril: 4,
+                maio: 5,
+                junho: 6,
+                julho: 7,
+                agosto: 8,
+                setembro: 9,
+                outubro: 10,
+                novembro: 11,
+                dezembro: 12,
+            };
+            return monthMap[monthName.toLowerCase()] || 0;
+        },
+        formatDate(year, month, day) {
+            return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        },
         async fetchData() {
             try {
-                const [materiaPrima, concentrado] = await Promise.all([
+                const [materiaPrimaResponse, concentradoResponse] = await Promise.all([
                     axios.get("http://localhost:3000/api/get_soma_materia_prima"),
                     axios.get("http://localhost:3000/api/get_soma_concentrado"),
                 ]);
 
-                // Combina os dados por Ordem de Produção
+                const materiaPrima = Array.isArray(materiaPrimaResponse.data)
+                    ? materiaPrimaResponse.data.map(this.normalizeKeys)
+                    : [this.normalizeKeys(materiaPrimaResponse.data)];
+
+                const concentrado = Array.isArray(concentradoResponse.data)
+                    ? concentradoResponse.data.map(this.normalizeKeys)
+                    : [this.normalizeKeys(concentradoResponse.data)];
+
                 const ordemMap = {};
 
-                // Processa Matéria-prima
-                materiaPrima.data.forEach((item) => {
+                materiaPrima.forEach((item) => {
                     ordemMap[item["Ordem de Produção"]] = {
                         ordem: item["Ordem de Produção"],
-                        materiaPrima: item["﻿Soma de Matéria-prima (Kg)"],
-                        concentrado: 0, // Inicializa concentrado com 0
-                        data: `${item.Ano}-${item.Mês}-${item.Dia}`, // Adiciona a data
+                        materiaPrima: item["Soma de Matéria-prima (Kg)"] || 0,
+                        concentrado: 0,
+                        data: this.formatDate(
+                            item.Ano,
+                            this.getNumericMonth(item.Mês),
+                            item.Dia
+                        ),
                     };
                 });
 
-                // Processa Concentrado
-                concentrado.data.forEach((item) => {
-                    if (ordemMap[item["﻿Ordem de Produção"]]) {
-                        ordemMap[item["﻿Ordem de Produção"]].concentrado =
-                            item["﻿Soma de Concentrado (Kg)"];
+                concentrado.forEach((item) => {
+                    if (ordemMap[item["Ordem de Produção"]]) {
+                        ordemMap[item["Ordem de Produção"]].concentrado =
+                            item["Soma de Concentrado (Kg)"] || 0;
                     }
                 });
 
-                // Calcula rendimento e converte para array
                 const indicadores = Object.values(ordemMap).map((indicador) => ({
                     ...indicador,
                     rendimento:
@@ -138,7 +169,6 @@ export default {
 
                 this.indicadores = indicadores;
 
-                // Configura os dados do gráfico
                 this.chartData = {
                     labels: indicadores.map((i) => i.ordem),
                     datasets: [
