@@ -248,7 +248,7 @@ export default {
 .sidebar {
     width: 250px;
     float: left;
-    margin-top: 20px;
+    margin-top: 10px;
     background-color: #0056b3;
     border-radius: 10px;
     color: white;
@@ -287,7 +287,7 @@ h3 {
 /* Conteúdo principal */
 .main-content {
     margin-left: 280px;
-    padding: 20px;
+    padding: 10px;
 }
 
 .chart-container {
