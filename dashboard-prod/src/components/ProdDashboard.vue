@@ -1,60 +1,56 @@
 <template>
     <div class="dashboard">
-        <h1 class="dashboard-title">📊 Dashboard de Produção</h1>
+        <header class="dashboard-header">
+            <h1 class="dashboard-title">Dashboard de Produção</h1>
+            <p class="dashboard-description">
+                Acompanhe o desempenho da produção com dados atualizados sobre matéria-prima, concentrado e rendimento. Selecione as ordens de produção para analisar e comparar os resultados.
+            </p>
+        </header>
 
-        <!-- Filtros -->
-        <div class="filters">
-            <div class="filter-group">
-                <label for="ordem">Filtrar por Ordem de Produção:</label>
-                <select v-model="filtroOrdem" id="ordem">
-                    <option value="">Todas</option>
-                    <option v-for="indicador in indicadores" :key="indicador.ordem" :value="indicador.ordem">
-                        {{ indicador.ordem }}
-                    </option>
-                </select>
+        <div class="content">
+            <!-- Barra de Navegação Lateral -->
+            <div class="sidebar">
+                <h3>Ordens de Produção</h3>
+                <div class="order-list">
+                    <label v-for="indicador in indicadores" :key="indicador.ordem" class="order-item">
+                        <input type="checkbox" :value="indicador.ordem" v-model="filtroOrdemSelecionadas" />
+                        Ordem {{ indicador.ordem }}
+                    </label>
+                </div>
+                <button v-if="filtroOrdemSelecionadas.length > 0" @click="clearFilters" class="clear-filters-btn">Limpar Filtros</button>
             </div>
 
-            <div class="filter-group">
-                <label for="periodo">Filtrar por Período:</label>
-                <select v-model="filtroPeriodo" id="periodo">
-                    <option value="">Todos</option>
-                    <option value="mes">Mês</option>
-                    <option value="trimestre">Trimestre</option>
-                    <option value="ano">Ano</option>
-                </select>
+            <!-- Conteúdo principal -->
+            <div class="main-content">
+                <!-- Gráfico de Rendimento -->
+                <div class="chart-container">
+                    <h2>Comparação de Rendimento</h2>
+                    <line-chart :data="chartData" />
+                </div>
+
+                <!-- Tabela de Dados -->
+                <div class="data-table">
+                    <table v-if="!loading">
+                        <thead>
+                            <tr>
+                                <th>Ordem de Produção</th>
+                                <th>Matéria-prima (Kg)</th>
+                                <th>Concentrado (Kg)</th>
+                                <th>Rendimento (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="indicador in indicadoresFiltrados" :key="indicador.ordem">
+                                <td>{{ indicador.ordem }}</td>
+                                <td>{{ indicador.materiaPrima }} Kg</td>
+                                <td>{{ indicador.concentrado }} Kg</td>
+                                <td>{{ indicador.rendimento.toFixed(2) }}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div v-else class="loading-spinner">Carregando dados...</div>
+                </div>
             </div>
-
-            <!-- Botão Limpar Filtros -->
-            <button v-if="filtroOrdem || filtroPeriodo" @click="clearFilters" class="clear-filters-btn">Limpar Filtros</button>
-        </div>
-
-        <!-- Indicadores -->
-        <div class="indicadores" v-if="!loading">
-            <div class="card" v-for="indicador in indicadoresFiltrados" :key="indicador.ordem">
-                <h3>Ordem de Produção: {{ indicador.ordem }}</h3>
-                <div class="indicator">
-                    <span class="indicator-label">Matéria-prima:</span>
-                    <span class="indicator-value">{{ indicador.materiaPrima }} Kg</span>
-                </div>
-                <div class="indicator">
-                    <span class="indicator-label">Concentrado:</span>
-                    <span class="indicator-value">{{ indicador.concentrado }} Kg</span>
-                </div>
-                <div class="indicator">
-                    <span class="indicator-label">Rendimento:</span>
-                    <span class="indicator-value">{{ indicador.rendimento.toFixed(2) }}%</span>
-                </div>
-            </div>
-        </div>
-
-        <div v-else class="loading-spinner">
-            <span>Carregando dados...</span>
-        </div>
-
-        <!-- Comparação -->
-        <div class="chart-container">
-            <h2>Comparação de Rendimento</h2>
-            <line-chart :data="chartData" />
         </div>
     </div>
 </template>
@@ -69,41 +65,20 @@ export default {
         return {
             indicadores: [], // Lista de dados combinados
             chartData: null, // Dados para o gráfico
-            filtroOrdem: "", // Filtro de ordem
-            filtroPeriodo: "", // Filtro de período
+            filtroOrdemSelecionadas: [], // Filtro de ordens selecionadas
             loading: false, // Indicador de carregamento
             error: null, // Mensagem de erro
         };
     },
     computed: {
-        // Filtra os indicadores com base nos filtros de Ordem de Produção e Período
+        // Filtra os indicadores com base nas ordens de produção selecionadas
         indicadoresFiltrados() {
-            let filtrados = this.indicadores;
-
-            if (this.filtroOrdem) {
-                filtrados = filtrados.filter(
-                    (indicador) => indicador.ordem === this.filtroOrdem
-                );
+            if (this.filtroOrdemSelecionadas.length === 0) {
+                return this.indicadores;
             }
-
-            if (this.filtroPeriodo) {
-                const now = new Date();
-                filtrados = filtrados.filter((indicador) => {
-                    const data = new Date(indicador.data);
-                    if (this.filtroPeriodo === "mes") {
-                        return data.getMonth() === now.getMonth();
-                    } else if (this.filtroPeriodo === "trimestre") {
-                        const trimestreAtual = Math.floor(now.getMonth() / 3) + 1;
-                        const trimestreIndicador = Math.floor(data.getMonth() / 3) + 1;
-                        return trimestreAtual === trimestreIndicador;
-                    } else if (this.filtroPeriodo === "ano") {
-                        return data.getFullYear() === now.getFullYear();
-                    }
-                    return true;
-                });
-            }
-
-            return filtrados;
+            return this.indicadores.filter(indicador =>
+                this.filtroOrdemSelecionadas.includes(indicador.ordem)
+            );
         },
     },
     methods: {
@@ -135,8 +110,7 @@ export default {
             return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         },
         clearFilters() {
-            this.filtroOrdem = "";
-            this.filtroPeriodo = "";
+            this.filtroOrdemSelecionadas = [];
         },
         async fetchData() {
             this.loading = true;
@@ -194,47 +168,43 @@ export default {
             }
         },
         updateChart() {
-    const indicadores = this.indicadoresFiltrados;
+            const indicadores = this.indicadoresFiltrados;
 
-    if (this.filtroOrdem) {
-        // Exibir gráfico de barra (coluna) para uma única ordem
-        const indicador = indicadores[0]; // Como é uma única ordem, assumimos que há só um item no array
+            if (indicadores.length === 1) {
+                // Exibir gráfico de barra (coluna) para uma única ordem
+                const indicador = indicadores[0];
 
-        this.chartData = {
-            labels: ["Matéria-prima", "Concentrado"],
-            datasets: [
-                {
-                    label: `Ordem ${indicador.ordem}`,
-                    data: [indicador.materiaPrima, indicador.concentrado],
-                    backgroundColor: ["#FF8C00", "#4CAF50"],
-                    borderColor: ["#FF7F00", "#388E3C"],
-                    borderWidth: 1,
-                },
-            ],
-        };
-    } else {
-        // Exibir gráfico de linha para múltiplas ordens
-        this.chartData = {
-            labels: indicadores.map((i) => i.ordem),
-            datasets: [
-                {
-                    label: "Rendimento (%)",
-                    data: indicadores.map((i) => i.rendimento),
-                    borderColor: "rgba(75, 192, 192, 1)",
-                    borderWidth: 2,
-                    fill: false,
-                },
-            ],
-        };
-    }
-}
-,
+                this.chartData = {
+                    labels: ["Matéria-prima", "Concentrado"],
+                    datasets: [
+                        {
+                            label: `Ordem ${indicador.ordem}`,
+                            data: [indicador.materiaPrima, indicador.concentrado],
+                            backgroundColor: ["#FF8C00", "#4CAF50"],
+                            borderColor: ["#FF7F00", "#388E3C"],
+                            borderWidth: 1,
+                        },
+                    ],
+                };
+            } else {
+                // Exibir gráfico de linha para múltiplas ordens
+                this.chartData = {
+                    labels: indicadores.map((i) => i.ordem),
+                    datasets: [
+                        {
+                            label: "Rendimento (%)",
+                            data: indicadores.map((i) => i.rendimento),
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            borderWidth: 2,
+                            fill: false,
+                        },
+                    ],
+                };
+            }
+        },
     },
     watch: {
-        filtroOrdem() {
-            this.updateChart();
-        },
-        filtroPeriodo() {
+        filtroOrdemSelecionadas() {
             this.updateChart();
         },
     },
@@ -245,7 +215,7 @@ export default {
 </script>
 
 <style scoped>
-/* Estrutura básica */
+/* Estilos gerais */
 .dashboard {
     font-family: 'Roboto', sans-serif;
     color: #333;
@@ -254,71 +224,32 @@ export default {
     margin: 0 auto;
 }
 
-.dashboard-title {
-    font-size: 2rem;
+.dashboard-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
     color: #0056b3;
+    margin-bottom: 10px;
 }
 
-/* Filtros */
-.filters {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-}
-
-label {
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #555;
-}
-
-select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+.dashboard-description {
     font-size: 1rem;
-    width: 100%;
-    max-width: 300px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: border-color 0.3s;
+    color: #666;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-select:focus {
-    border-color: #0056b3;
-    outline: none;
-}
-
-/* Indicadores */
-.indicadores {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-}
-
-.card {
-    background: #f9f9f9;
-    border: 1px solid #e1e1e1;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* Barra lateral */
+.sidebar {
     width: 250px;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    float: left;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 h3 {
@@ -327,74 +258,81 @@ h3 {
     margin-bottom: 15px;
 }
 
-.indicator {
-    display: flex;
-    justify-content: space-between;
-    margin: 5px 0;
+.order-list {
+    margin-bottom: 20px;
 }
 
-.indicator-label {
-    font-weight: 500;
-    color: #666;
+.order-item {
+    display: block;
+    margin: 8px 0;
+    font-size: 1rem;
 }
 
-.indicator-value {
-    font-weight: 600;
-    color: #333;
+.clear-filters-btn {
+    padding: 8px 15px;
+    background-color: #f44336;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
-/* Gráfico */
-.chart-container {
-    margin-top: 30px;
+.clear-filters-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Conteúdo principal */
+.main-content {
+    margin-left: 280px;
     padding: 20px;
-    background: #fff;
-    border: 1px solid #e1e1e1;
+}
+
+.chart-container {
+    margin-bottom: 30px;
+}
+
+h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.data-table {
+    background-color: #fff;
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.chart-container h2 {
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
     text-align: center;
-    font-size: 1.5rem;
-    color: #333;
-    margin-bottom: 20px;
+    border: 1px solid #ddd;
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-    .filters {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .indicadores {
-        justify-content: center;
-    }
-
-    .card {
-        width: 100%;
-        max-width: 400px;
-    }
+th {
+    background-color: #0056b3;
+    color: white;
 }
 
-/* Loading */
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
 .loading-spinner {
     text-align: center;
-    font-size: 1.5rem;
-    color: #0056b3;
-}
-
-.clear-filters-btn {
-    background-color: #ff4d4d;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 600;
-    border: none;
-}
-
-.clear-filters-btn:hover {
-    background-color: #ff1a1a;
+    font-size: 1.2rem;
+    color: #666;
 }
 </style>
