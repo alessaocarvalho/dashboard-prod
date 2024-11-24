@@ -66,12 +66,12 @@
 
                 <!-- Conteúdo das abas -->
                 <div v-if="activeTab === 'line'" class="chart-container">
-                    <h2>Comparação de Rendimento</h2>
+                    <h2>Comparação de Rendimento (%)</h2>
                     <line-chart :data="chartData" />
                 </div>
 
                 <div v-else-if="activeTab === 'bar'" class="chart-container">
-                    <h2>Visualização em Gráfico de Barras</h2>
+                    <h2>Comparação de Rendimento (%)</h2>
                     <bar-chart :data="barChartData" />
                 </div>
 
