@@ -25,6 +25,26 @@
 
             <!-- Conteúdo principal -->
             <div class="main-content">
+                <!-- KPIs -->
+                <div class="kpi-section">
+                    <div class="kpi-card">
+                        <h3>Ordens de Produção Selecionadas</h3>
+                        <p>{{ filtroOrdemSelecionadas.length }} de {{ indicadores.length }}</p>
+                    </div>
+                    <div class="kpi-card">
+                        <h3>Rendimento Médio (%)</h3>
+                        <p>{{ averageRendimento.toFixed(2) }}%</p>
+                    </div>
+                    <div class="kpi-card">
+                        <h3>Total de Matéria-prima (Kg)</h3>
+                        <p>{{ totalMateriaPrima.toFixed(2) }} Kg</p>
+                    </div>
+                    <div class="kpi-card">
+                        <h3>Total de Concentrado (Kg)</h3>
+                        <p>{{ totalConcentrado.toFixed(2) }} Kg</p>
+                    </div>
+                </div>
+
                 <!-- Navegação entre abas -->
                 <div class="tabs">
                     <button :class="{ active: activeTab === 'line' }" @click="activeTab = 'line'" class="tab-button">
@@ -33,22 +53,24 @@
                     <button :class="{ active: activeTab === 'bar' }" @click="activeTab = 'bar'" class="tab-button">
                         Gráfico de Barras
                     </button>
-                    <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'" class="tab-button">
+                    <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'"
+                        class="tab-button">
                         Matéria-prima vs Concentrado
                     </button>
-                    <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'" class="tab-button">
+                    <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'"
+                        class="tab-button">
                         Dados Brutos
                     </button>
                 </div>
 
                 <!-- Conteúdo das abas -->
                 <div v-if="activeTab === 'line'" class="chart-container">
-                    <h2>Comparação de Rendimento (%)</h2>
+                    <h2>Comparação de Rendimento</h2>
                     <line-chart :data="chartData" />
                 </div>
 
                 <div v-else-if="activeTab === 'bar'" class="chart-container">
-                    <h2>Comparação de Rendimento (%)</h2>
+                    <h2>Visualização em Gráfico de Barras</h2>
                     <bar-chart :data="barChartData" />
                 </div>
 
@@ -110,6 +132,19 @@ export default {
             return this.indicadores.filter(indicador =>
                 this.filtroOrdemSelecionadas.includes(indicador.ordem)
             );
+        },
+        // KPI - Rendimento Médio
+        averageRendimento() {
+            const totalRendimento = this.indicadoresFiltrados.reduce((acc, indicador) => acc + indicador.rendimento, 0);
+            return this.indicadoresFiltrados.length ? totalRendimento / this.indicadoresFiltrados.length : 0;
+        },
+        // KPI - Total de Matéria-prima
+        totalMateriaPrima() {
+            return this.indicadoresFiltrados.reduce((acc, indicador) => acc + indicador.materiaPrima, 0);
+        },
+        // KPI - Total de Concentrado
+        totalConcentrado() {
+            return this.indicadoresFiltrados.reduce((acc, indicador) => acc + indicador.concentrado, 0);
         },
     },
     methods: {
@@ -370,5 +405,33 @@ tr:nth-child(even) {
 
 tr:hover {
     background-color: #f1f1f1;
+}
+
+.kpi-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.kpi-card {
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: auto;
+    text-align: center;
+}
+
+.kpi-card h3 {
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.kpi-card p {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0056b3;
 }
 </style>
