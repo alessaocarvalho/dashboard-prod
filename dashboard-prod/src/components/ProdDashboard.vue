@@ -30,21 +30,53 @@
                     <button :class="{ active: activeTab === 'line' }" @click="activeTab = 'line'" class="tab-button">
                         Gráfico de Linha
                     </button>
-                    <button :class="{ active: activeTab === 'treemap' }" @click="activeTab = 'treemap'"
-                        class="tab-button">
-                        Treemap
+                    <button :class="{ active: activeTab === 'bar' }" @click="activeTab = 'bar'" class="tab-button">
+                        Gráfico de Barras
+                    </button>
+                    <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'" class="tab-button">
+                        Matéria-prima vs Concentrado
+                    </button>
+                    <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'" class="tab-button">
+                        Dados Brutos
                     </button>
                 </div>
 
                 <!-- Conteúdo das abas -->
                 <div v-if="activeTab === 'line'" class="chart-container">
-                    <h2>Comparação de Rendimento</h2>
+                    <h2>Comparação de Rendimento (%)</h2>
                     <line-chart :data="chartData" />
                 </div>
 
-                <div v-else-if="activeTab === 'treemap'" class="chart-container">
-                    <h2>Visualização em Treemap</h2>
-                    <treemap-chart :data="treemapData" />
+                <div v-else-if="activeTab === 'bar'" class="chart-container">
+                    <h2>Comparação de Rendimento (%)</h2>
+                    <bar-chart :data="barChartData" />
+                </div>
+
+                <div v-else-if="activeTab === 'relation'" class="chart-container">
+                    <h2>Relação Matéria-prima vs Concentrado</h2>
+                    <line-chart :data="relationChartData" />
+                </div>
+
+                <div v-else-if="activeTab === 'rawData'" class="raw-data-container">
+                    <h2>Dados Brutos</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ordem de Produção</th>
+                                <th>Matéria-prima (Kg)</th>
+                                <th>Concentrado (Kg)</th>
+                                <th>Rendimento (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="indicador in indicadoresFiltrados" :key="indicador.ordem">
+                                <td>{{ indicador.ordem }}</td>
+                                <td>{{ indicador.materiaPrima }}</td>
+                                <td>{{ indicador.concentrado }}</td>
+                                <td>{{ indicador.rendimento.toFixed(2) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -54,19 +86,20 @@
 <script>
 import axios from "axios";
 import LineChart from "./LineChart.vue";
-import TreemapChart from "./TreemapChart.vue";
+import BarChart from "./BarChart.vue"; // Componente para gráfico de barras
 
 export default {
-    components: { LineChart, TreemapChart },
+    components: { LineChart, BarChart },
     data() {
         return {
             indicadores: [], // Lista de dados combinados
-            chartData: null, // Dados para o gráfico de linha
-            treemapData: null, // Dados para o gráfico de Treemap
+            chartData: null, // Dados para o gráfico de linha (rendimento)
+            barChartData: null, // Dados para o gráfico de barras
+            relationChartData: null, // Dados para o gráfico de linha de relação (matéria-prima vs concentrado)
             filtroOrdemSelecionadas: [], // Filtro de ordens selecionadas
             loading: false, // Indicador de carregamento
             error: null, // Mensagem de erro
-            activeTab: "line", // Aba ativa ("line" ou "treemap")
+            activeTab: "line", // Aba ativa ("line", "bar", "relation", ou "rawData")
         };
     },
     computed: {
@@ -138,7 +171,7 @@ export default {
         updateCharts() {
             const indicadores = this.indicadoresFiltrados;
 
-            // Dados para o gráfico de linha
+            // Dados para o gráfico de linha (rendimento)
             this.chartData = {
                 labels: indicadores.map(i => i.ordem),
                 datasets: [
@@ -152,13 +185,41 @@ export default {
                 ],
             };
 
-            // Dados para o Treemap
-            this.treemapData = indicadores.map(indicador => ({
-                name: `Ordem de Produção: ${indicador.ordem}`,  // Nome da ordem de produção
-                value: indicador.rendimento,     // Valor que representa a área do retângulo
-            }));
-        }
-        ,
+            // Dados para o gráfico de barras
+            this.barChartData = {
+                labels: indicadores.map(i => `Ordem ${i.ordem}`),
+                datasets: [
+                    {
+                        label: "Rendimento (%)",
+                        data: indicadores.map(i => i.rendimento),
+                        backgroundColor: "rgba(75, 192, 192, 0.2)",
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 1,
+                    },
+                ],
+            };
+
+            // Dados para o gráfico de linha de Matéria-prima vs Concentrado
+            this.relationChartData = {
+                labels: indicadores.map(i => i.ordem),
+                datasets: [
+                    {
+                        label: "Matéria-prima (Kg)",
+                        data: indicadores.map(i => i.materiaPrima),
+                        borderColor: "rgba(255, 99, 132, 1)",
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                    {
+                        label: "Concentrado (Kg)",
+                        data: indicadores.map(i => i.concentrado),
+                        borderColor: "rgba(54, 162, 235, 1)",
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                ],
+            };
+        },
     },
     watch: {
         filtroOrdemSelecionadas() {
@@ -255,11 +316,37 @@ h2 {
     margin-bottom: 15px;
 }
 
-.data-table {
-    padding: 20px;
+.loading-spinner {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
 }
 
-table {
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.tab-button.active {
+    background: #0056b3;
+    color: white;
+}
+
+.raw-data-container {
+    margin-top: 20px;
+}
+
+.data-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
@@ -283,32 +370,5 @@ tr:nth-child(even) {
 
 tr:hover {
     background-color: #f1f1f1;
-}
-
-.loading-spinner {
-    text-align: center;
-    font-size: 1.2rem;
-    color: #666;
-}
-
-/* Estilos para layout */
-.tabs {
-    display: flex;
-    margin-bottom: 20px;
-}
-
-.tab-button {
-    padding: 10px 20px;
-    margin-right: 10px;
-    border: none;
-    background: #ddd;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 1rem;
-}
-
-.tab-button.active {
-    background: #0056b3;
-    color: white;
 }
 </style>
