@@ -154,8 +154,8 @@ export default {
 
             // Dados para o Treemap
             this.treemapData = indicadores.map(indicador => ({
-                name: `Ordem ${indicador.ordem}`,  // Nome da ordem de produção
-                value: indicador.materiaPrima,     // Valor que representa a área do retângulo
+                name: `Ordem de Produção: ${indicador.ordem}`,  // Nome da ordem de produção
+                value: indicador.rendimento,     // Valor que representa a área do retângulo
             }));
         }
         ,
