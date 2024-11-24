@@ -18,39 +18,33 @@
                         Ordem {{ indicador.ordem }}
                     </label>
                 </div>
-                <button v-if="filtroOrdemSelecionadas.length > 0" @click="clearFilters" class="clear-filters-btn">Limpar
-                    Filtros</button>
+                <button v-if="filtroOrdemSelecionadas.length > 0" @click="clearFilters" class="clear-filters-btn">
+                    Limpar Filtros
+                </button>
             </div>
 
             <!-- Conteúdo principal -->
             <div class="main-content">
-                <!-- Gráfico de Rendimento -->
-                <div class="chart-container">
+                <!-- Navegação entre abas -->
+                <div class="tabs">
+                    <button :class="{ active: activeTab === 'line' }" @click="activeTab = 'line'" class="tab-button">
+                        Gráfico de Linha
+                    </button>
+                    <button :class="{ active: activeTab === 'treemap' }" @click="activeTab = 'treemap'"
+                        class="tab-button">
+                        Treemap
+                    </button>
+                </div>
+
+                <!-- Conteúdo das abas -->
+                <div v-if="activeTab === 'line'" class="chart-container">
                     <h2>Comparação de Rendimento</h2>
                     <line-chart :data="chartData" />
                 </div>
 
-                <!-- Tabela de Dados -->
-                <div class="data-table">
-                    <table v-if="!loading">
-                        <thead>
-                            <tr>
-                                <th>Ordem de Produção</th>
-                                <th>Matéria-prima (Kg)</th>
-                                <th>Concentrado (Kg)</th>
-                                <th>Rendimento (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="indicador in indicadoresFiltrados" :key="indicador.ordem">
-                                <td>{{ indicador.ordem }}</td>
-                                <td>{{ indicador.materiaPrima }} Kg</td>
-                                <td>{{ indicador.concentrado }} Kg</td>
-                                <td>{{ indicador.rendimento.toFixed(2) }}%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div v-else class="loading-spinner">Carregando dados...</div>
+                <div v-else-if="activeTab === 'treemap'" class="chart-container">
+                    <h2>Visualização em Treemap</h2>
+                    <treemap-chart :data="treemapData" />
                 </div>
             </div>
         </div>
@@ -60,20 +54,22 @@
 <script>
 import axios from "axios";
 import LineChart from "./LineChart.vue";
+import TreemapChart from "./TreemapChart.vue";
 
 export default {
-    components: { LineChart },
+    components: { LineChart, TreemapChart },
     data() {
         return {
             indicadores: [], // Lista de dados combinados
-            chartData: null, // Dados para o gráfico
+            chartData: null, // Dados para o gráfico de linha
+            treemapData: null, // Dados para o gráfico de Treemap
             filtroOrdemSelecionadas: [], // Filtro de ordens selecionadas
             loading: false, // Indicador de carregamento
             error: null, // Mensagem de erro
+            activeTab: "line", // Aba ativa ("line" ou "treemap")
         };
     },
     computed: {
-        // Filtra os indicadores com base nas ordens de produção selecionadas
         indicadoresFiltrados() {
             if (this.filtroOrdemSelecionadas.length === 0) {
                 return this.indicadores;
@@ -84,33 +80,6 @@ export default {
         },
     },
     methods: {
-        normalizeKeys(obj) {
-            return Object.keys(obj).reduce((acc, key) => {
-                const cleanKey = key.trim().replace(/^\uFEFF/, ""); // Remove caracteres invisíveis
-                acc[cleanKey] = obj[key];
-                return acc;
-            }, {});
-        },
-        getNumericMonth(monthName) {
-            const monthMap = {
-                janeiro: 1,
-                fevereiro: 2,
-                março: 3,
-                abril: 4,
-                maio: 5,
-                junho: 6,
-                julho: 7,
-                agosto: 8,
-                setembro: 9,
-                outubro: 10,
-                novembro: 11,
-                dezembro: 12,
-            };
-            return monthMap[monthName.toLowerCase()] || 0;
-        },
-        formatDate(year, month, day) {
-            return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        },
         clearFilters() {
             this.filtroOrdemSelecionadas = [];
         },
@@ -124,44 +93,34 @@ export default {
                     axios.get("http://localhost:3000/api/get_soma_concentrado"),
                 ]);
 
-                const materiaPrima = Array.isArray(materiaPrimaResponse.data)
-                    ? materiaPrimaResponse.data.map(this.normalizeKeys)
-                    : [this.normalizeKeys(materiaPrimaResponse.data)];
-
-                const concentrado = Array.isArray(concentradoResponse.data)
-                    ? concentradoResponse.data.map(this.normalizeKeys)
-                    : [this.normalizeKeys(concentradoResponse.data)];
+                const materiaPrima = materiaPrimaResponse.data.map(item => this.normalizeKeys(item));
+                const concentrado = concentradoResponse.data.map(item => this.normalizeKeys(item));
 
                 const ordemMap = {};
 
-                materiaPrima.forEach((item) => {
+                materiaPrima.forEach(item => {
                     ordemMap[item["Ordem de Produção"]] = {
                         ordem: item["Ordem de Produção"],
                         materiaPrima: item["Soma de Matéria-prima (Kg)"] || 0,
                         concentrado: 0,
-                        data: this.formatDate(
-                            item.Ano,
-                            this.getNumericMonth(item.Mês),
-                            item.Dia
-                        ),
                     };
                 });
 
-                concentrado.forEach((item) => {
+                concentrado.forEach(item => {
                     if (ordemMap[item["Ordem de Produção"]]) {
                         ordemMap[item["Ordem de Produção"]].concentrado =
                             item["Soma de Concentrado (Kg)"] || 0;
                     }
                 });
 
-                const indicadores = Object.values(ordemMap).map((indicador) => ({
+                const indicadores = Object.values(ordemMap).map(indicador => ({
                     ...indicador,
                     rendimento:
                         (indicador.concentrado / indicador.materiaPrima) * 100 || 0,
                 }));
 
                 this.indicadores = indicadores;
-                this.updateChart();
+                this.updateCharts();
             } catch (error) {
                 this.error = "Erro ao carregar os dados, tente novamente mais tarde.";
                 console.error(error);
@@ -169,45 +128,41 @@ export default {
                 this.loading = false;
             }
         },
-        updateChart() {
+        normalizeKeys(obj) {
+            return Object.keys(obj).reduce((acc, key) => {
+                const cleanKey = key.trim().replace(/^\uFEFF/, "");
+                acc[cleanKey] = obj[key];
+                return acc;
+            }, {});
+        },
+        updateCharts() {
             const indicadores = this.indicadoresFiltrados;
 
-            if (indicadores.length === 1) {
-                // Exibir gráfico de barra (coluna) para uma única ordem
-                const indicador = indicadores[0];
+            // Dados para o gráfico de linha
+            this.chartData = {
+                labels: indicadores.map(i => i.ordem),
+                datasets: [
+                    {
+                        label: "Rendimento (%)",
+                        data: indicadores.map(i => i.rendimento),
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                ],
+            };
 
-                this.chartData = {
-                    labels: ["Matéria-prima", "Concentrado"],
-                    datasets: [
-                        {
-                            label: `Ordem ${indicador.ordem}`,
-                            data: [indicador.materiaPrima, indicador.concentrado],
-                            backgroundColor: ["#FF8C00", "#4CAF50"],
-                            borderColor: ["#FF7F00", "#388E3C"],
-                            borderWidth: 1,
-                        },
-                    ],
-                };
-            } else {
-                // Exibir gráfico de linha para múltiplas ordens
-                this.chartData = {
-                    labels: indicadores.map((i) => i.ordem),
-                    datasets: [
-                        {
-                            label: "Rendimento (%)",
-                            data: indicadores.map((i) => i.rendimento),
-                            borderColor: "rgba(75, 192, 192, 1)",
-                            borderWidth: 2,
-                            fill: false,
-                        },
-                    ],
-                };
-            }
-        },
+            // Dados para o Treemap
+            this.treemapData = indicadores.map(indicador => ({
+                name: `Ordem ${indicador.ordem}`,  // Nome da ordem de produção
+                value: indicador.materiaPrima,     // Valor que representa a área do retângulo
+            }));
+        }
+        ,
     },
     watch: {
         filtroOrdemSelecionadas() {
-            this.updateChart();
+            this.updateCharts();
         },
     },
     mounted() {
@@ -334,5 +289,26 @@ tr:hover {
     text-align: center;
     font-size: 1.2rem;
     color: #666;
+}
+
+/* Estilos para layout */
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.tab-button.active {
+    background: #0056b3;
+    color: white;
 }
 </style>
