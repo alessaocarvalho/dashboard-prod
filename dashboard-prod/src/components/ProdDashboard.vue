@@ -12,6 +12,7 @@
             <!-- Barra de Navegação Lateral -->
             <div class="sidebar">
                 <h3>Ordens de Produção</h3>
+                <p>Selecione para comparar</p>
                 <div class="order-list">
                     <label v-for="indicador in indicadores" :key="indicador.ordem" class="order-item">
                         <input type="checkbox" :value="indicador.ordem" v-model="filtroOrdemSelecionadas" />
