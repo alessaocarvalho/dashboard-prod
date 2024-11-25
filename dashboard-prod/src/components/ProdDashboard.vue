@@ -459,18 +459,22 @@ tr:hover {
 .kpi-section {
     display: flex;
     justify-content: space-between;
-    gap: 20px;
-    margin-bottom: 30px;
 }
 
 .kpi-card {
     background-color: #f4f4f4;
-    padding: 20px;
+    padding: 10px;
+    margin: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
     height: auto;
     text-align: center;
+    transition: transform 0.3s ease-in-out;
+}
+
+.kpi-card:hover {
+    transform: scale(1.1);
 }
 
 .kpi-card h3 {
