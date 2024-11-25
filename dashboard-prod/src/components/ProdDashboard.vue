@@ -48,39 +48,47 @@
 
                 <!-- Navegação entre abas -->
                 <div class="tabs">
-                    <button :class="{ active: activeTab === 'line' }" @click="activeTab = 'line'" class="tab-button">
-                        Gráfico de Linha
+                    <button :class="{ active: activeTab === 'rendimento' }" @click="activeTab = 'rendimento'" class="tab-button">
+                        Comparação de Rendimento (%)
                     </button>
-                    <button :class="{ active: activeTab === 'bar' }" @click="activeTab = 'bar'" class="tab-button">
-                        Gráfico de Barras
-                    </button>
-                    <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'"
-                        class="tab-button">
+                    <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'" class="tab-button">
                         Matéria-prima vs Concentrado
                     </button>
-                    <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'"
-                        class="tab-button">
+                    <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'" class="tab-button">
                         Dados Brutos
                     </button>
                 </div>
 
                 <!-- Conteúdo das abas -->
-                <div v-if="activeTab === 'line'" class="chart-container">
+                <div v-if="activeTab === 'rendimento'" class="chart-container">
                     <h2>Comparação de Rendimento (%)</h2>
-                    <line-chart :data="chartData" />
+                    <div class="chart-toggle">
+                        <button @click="chartType = 'line'" :class="{ active: chartType === 'line' }">Gráfico de Linha</button>
+                        <button @click="chartType = 'bar'" :class="{ active: chartType === 'bar' }">Gráfico de Barras</button>
+                    </div>
+                    <div v-if="chartType === 'line'">
+                        <line-chart :data="chartData" />
+                    </div>
+                    <div v-else>
+                        <bar-chart :data="barChartData" />
+                    </div>
                 </div>
 
-                <div v-else-if="activeTab === 'bar'" class="chart-container">
-                    <h2>Comparação de Rendimento (%)</h2>
-                    <bar-chart :data="barChartData" />
-                </div>
-
-                <div v-else-if="activeTab === 'relation'" class="chart-container">
+                <div v-if="activeTab === 'relation'" class="chart-container">
                     <h2>Relação Matéria-prima vs Concentrado</h2>
-                    <line-chart :data="relationChartData" />
+                    <div class="chart-toggle">
+                        <button @click="relationChartType = 'line'" :class="{ active: relationChartType === 'line' }">Gráfico de Linha</button>
+                        <button @click="relationChartType = 'bar'" :class="{ active: relationChartType === 'bar' }">Gráfico de Barras</button>
+                    </div>
+                    <div v-if="relationChartType === 'line'">
+                        <line-chart :data="relationChartData" />
+                    </div>
+                    <div v-else>
+                        <bar-chart :data="relationBarChartData" />
+                    </div>
                 </div>
 
-                <div v-else-if="activeTab === 'rawData'" class="raw-data-container">
+                <div v-if="activeTab === 'rawData'" class="raw-data-container">
                     <h2>Dados Brutos</h2>
                     <table class="data-table">
                         <thead>
@@ -117,12 +125,15 @@ export default {
         return {
             indicadores: [], // Lista de dados combinados
             chartData: null, // Dados para o gráfico de linha (rendimento)
-            barChartData: null, // Dados para o gráfico de barras
+            barChartData: null, // Dados para o gráfico de barras (rendimento)
             relationChartData: null, // Dados para o gráfico de linha de relação (matéria-prima vs concentrado)
+            relationBarChartData: null, // Dados para o gráfico de barras de relação (matéria-prima vs concentrado)
             filtroOrdemSelecionadas: [], // Filtro de ordens selecionadas
             loading: false, // Indicador de carregamento
             error: null, // Mensagem de erro
-            activeTab: "line", // Aba ativa ("line", "bar", "relation", ou "rawData")
+            activeTab: "rendimento", // Aba ativa ("rendimento", "relation", ou "rawData")
+            chartType: "line", // Tipo de gráfico de rendimento (linha ou barra)
+            relationChartType: "line", // Tipo de gráfico de relação (linha ou barra)
         };
     },
     computed: {
@@ -225,7 +236,7 @@ export default {
                 ],
             };
 
-            // Dados para o gráfico de barras
+            // Dados para o gráfico de barras (rendimento)
             this.barChartData = {
                 labels: indicadores.map(i => `Ordem ${i.ordem}`),
                 datasets: [
@@ -238,7 +249,7 @@ export default {
                         hoverBackgroundColor: "rgba(75, 192, 192, 1)", // Cor ao passar o mouse
                         hoverBorderColor: "rgba(75, 192, 192, 1)",
                         borderRadius: 5, // Barras arredondadas
-                        barThickness: 20,
+                        barThickness: 50,
                     },
                 ],
             };
@@ -253,6 +264,7 @@ export default {
                         borderColor: "rgba(255, 99, 132, 1)",
                         borderWidth: 3,
                         borderDash: [5, 5], // Linha pontilhada
+                        pointRadius: 5,
                         fill: false,
                         tension: 0.4,
                     },
@@ -261,8 +273,30 @@ export default {
                         data: indicadores.map(i => i.concentrado),
                         borderColor: "rgba(54, 162, 235, 1)",
                         borderWidth: 3,
+                        pointRadius: 5,
                         fill: false,
                         tension: 0.4,
+                    },
+                ],
+            };
+
+            // Dados para o gráfico de barras de Matéria-prima vs Concentrado
+            this.relationBarChartData = {
+                labels: indicadores.map(i => i.ordem),
+                datasets: [
+                    {
+                        label: "Matéria-prima (Kg)",
+                        data: indicadores.map(i => i.materiaPrima),
+                        backgroundColor: "rgba(255, 99, 132, 0.7)",
+                        borderColor: "rgba(255, 99, 132, 1)",
+                        borderWidth: 2,
+                    },
+                    {
+                        label: "Concentrado (Kg)",
+                        data: indicadores.map(i => i.concentrado),
+                        backgroundColor: "rgba(54, 162, 235, 0.7)",
+                        borderColor: "rgba(54, 162, 235, 1)",
+                        borderWidth: 2,
                     },
                 ],
             };
@@ -445,5 +479,26 @@ tr:hover {
     font-size: 1.5rem;
     font-weight: bold;
     color: #0056b3;
+}
+
+.chart-toggle {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.chart-toggle button {
+    padding: 5px 10px;
+    margin: 0 5px;
+    background-color: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 1rem;
+}
+
+.chart-toggle button.active {
+    background-color: #0056b3;
+    color: white;
 }
 </style>
