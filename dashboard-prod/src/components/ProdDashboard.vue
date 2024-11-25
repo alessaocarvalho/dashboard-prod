@@ -263,7 +263,6 @@ export default {
                         data: indicadores.map(i => i.materiaPrima),
                         borderColor: "rgba(255, 99, 132, 1)",
                         borderWidth: 3,
-                        borderDash: [5, 5], // Linha pontilhada
                         pointRadius: 5,
                         fill: false,
                         tension: 0.4,
@@ -290,6 +289,8 @@ export default {
                         backgroundColor: "rgba(255, 99, 132, 0.7)",
                         borderColor: "rgba(255, 99, 132, 1)",
                         borderWidth: 2,
+                        borderRadius: 5, // Barras arredondadas
+                        barThickness: 30,
                     },
                     {
                         label: "Concentrado (Kg)",
@@ -297,6 +298,8 @@ export default {
                         backgroundColor: "rgba(54, 162, 235, 0.7)",
                         borderColor: "rgba(54, 162, 235, 1)",
                         borderWidth: 2,
+                        borderRadius: 5, // Barras arredondadas
+                        barThickness: 30,
                     },
                 ],
             };
