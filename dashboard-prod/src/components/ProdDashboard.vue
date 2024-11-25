@@ -238,7 +238,7 @@ export default {
 
             // Dados para o gráfico de barras (rendimento)
             this.barChartData = {
-                labels: indicadores.map(i => `Ordem ${i.ordem}`),
+                labels: indicadores.map(i => i.ordem),
                 datasets: [
                     {
                         label: "Rendimento (%)",
