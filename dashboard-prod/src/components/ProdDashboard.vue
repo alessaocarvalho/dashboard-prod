@@ -215,8 +215,12 @@ export default {
                         label: "Rendimento (%)",
                         data: indicadores.map(i => i.rendimento),
                         borderColor: "rgba(75, 192, 192, 1)",
-                        borderWidth: 2,
-                        fill: false,
+                        backgroundColor: "rgba(75, 192, 192, 0.2)", // Cor de fundo suave
+                        borderWidth: 3,
+                        pointBackgroundColor: "rgba(75, 192, 192, 1)", // Ponto de dados
+                        pointRadius: 5,
+                        fill: true, // Preenchimento suave abaixo da linha
+                        tension: 0.4,
                     },
                 ],
             };
@@ -228,9 +232,13 @@ export default {
                     {
                         label: "Rendimento (%)",
                         data: indicadores.map(i => i.rendimento),
-                        backgroundColor: "rgba(75, 192, 192, 0.2)",
+                        backgroundColor: "rgba(75, 192, 192, 0.7)",
                         borderColor: "rgba(75, 192, 192, 1)",
-                        borderWidth: 1,
+                        borderWidth: 2,
+                        hoverBackgroundColor: "rgba(75, 192, 192, 1)", // Cor ao passar o mouse
+                        hoverBorderColor: "rgba(75, 192, 192, 1)",
+                        borderRadius: 5, // Barras arredondadas
+                        barThickness: 20,
                     },
                 ],
             };
@@ -243,15 +251,18 @@ export default {
                         label: "Matéria-prima (Kg)",
                         data: indicadores.map(i => i.materiaPrima),
                         borderColor: "rgba(255, 99, 132, 1)",
-                        borderWidth: 2,
+                        borderWidth: 3,
+                        borderDash: [5, 5], // Linha pontilhada
                         fill: false,
+                        tension: 0.4,
                     },
                     {
                         label: "Concentrado (Kg)",
                         data: indicadores.map(i => i.concentrado),
                         borderColor: "rgba(54, 162, 235, 1)",
-                        borderWidth: 2,
+                        borderWidth: 3,
                         fill: false,
+                        tension: 0.4,
                     },
                 ],
             };
