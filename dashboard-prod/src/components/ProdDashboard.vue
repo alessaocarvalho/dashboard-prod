@@ -14,14 +14,11 @@
                 <h3>Ordens de Produção</h3>
                 <p>Selecione para comparar</p>
                 <div class="order-list">
-                    <label v-for="indicador in indicadores" :key="indicador.ordem" class="order-item">
+                    <label v-for="indicador in filteredOrders" :key="indicador.ordem" class="order-item">
                         <input type="checkbox" :value="indicador.ordem" v-model="filtroOrdemSelecionadas" />
                         Ordem {{ indicador.ordem }}
                     </label>
                 </div>
-                <button v-if="filtroOrdemSelecionadas.length > 0" @click="clearFilters" class="clear-filters-btn">
-                    Limpar Filtros
-                </button>
             </div>
 
             <!-- Conteúdo principal -->
@@ -59,6 +56,23 @@
                     <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'"
                         class="tab-button">
                         Dados Brutos
+                    </button>
+                    <!-- Filtro de Data -->
+                    <div class="data-filters">
+                        <label for="year">Ano</label>
+                        <select v-model="selectedYear" @change="applyDateFilter">
+                            <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+                        </select>
+
+                        <label for="month">Mês</label>
+                        <select v-model="selectedMonth" @change="applyDateFilter">
+                            <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                                {{ month }}
+                            </option>
+                        </select>
+                    </div>
+                    <button @click="clearFilters" class="tab-button">
+                        Limpar Filtros
                     </button>
                 </div>
 
@@ -141,25 +155,59 @@ export default {
             filtroOrdemSelecionadas: [], // Filtro de ordens selecionadas
             loading: false, // Indicador de carregamento
             error: null, // Mensagem de erro
-            activeTab: "rendimento", // Aba ativa ("rendimento", "relation", ou "rawData")
+            activeTab: "rendimento", // Aba ativa ("rendimento" ou "relation")
             chartType: "line", // Tipo de gráfico de rendimento (linha ou barra)
             relationChartType: "line", // Tipo de gráfico de relação (linha ou barra)
             selectedMonth: null,
             selectedYear: null,
             availableYears: [], // Anos disponíveis para o seletor
+            availableMonths: [], // Meses disponíveis para o seletor
             months: [
-                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
             ],
         };
     },
     computed: {
+        filteredOrders() {
+            let filtered = this.indicadores;
+
+            // Filtro por ano
+            if (this.selectedYear) {
+                filtered = filtered.filter(indicador =>
+                    new Date(indicador.data).getFullYear() === this.selectedYear
+                );
+            }
+
+            // Filtro por mês
+            if (this.selectedMonth) {
+                filtered = filtered.filter(indicador =>
+                    new Date(indicador.data).getMonth() + 1 === this.selectedMonth
+                );
+            }
+
+            return filtered;
+        },
         indicadoresFiltrados() {
             let indicadoresFiltrados = this.indicadores;
 
+            // Filtro de ordens selecionadas
             if (this.filtroOrdemSelecionadas.length > 0) {
                 indicadoresFiltrados = indicadoresFiltrados.filter(indicador =>
                     this.filtroOrdemSelecionadas.includes(indicador.ordem)
+                );
+            }
+
+            // Filtro de ano e mês
+            if (this.selectedYear) {
+                indicadoresFiltrados = indicadoresFiltrados.filter(indicador =>
+                    new Date(indicador.data).getFullYear() === this.selectedYear
+                );
+            }
+
+            if (this.selectedMonth) {
+                indicadoresFiltrados = indicadoresFiltrados.filter(indicador =>
+                    new Date(indicador.data).getMonth() + 1 === this.selectedMonth
                 );
             }
 
@@ -189,6 +237,8 @@ export default {
         },
         clearFilters() {
             this.filtroOrdemSelecionadas = [];
+            this.selectedYear = null;
+            this.selectedMonth = null;
         },
         async fetchData() {
             this.loading = true;
@@ -230,6 +280,13 @@ export default {
                 }));
 
                 this.indicadores = indicadores;
+
+                // Definir os anos e meses disponíveis para o filtro
+                this.availableYears = [...new Set(indicadores.map(indicador => indicador.ano))].sort();
+
+                // Atualiza os meses disponíveis com base nos dados filtrados por ano
+                this.updateAvailableMonths();
+
                 this.updateCharts();
             } catch (error) {
                 this.error = "Erro ao carregar os dados, tente novamente mais tarde.";
@@ -237,6 +294,19 @@ export default {
             } finally {
                 this.loading = false;
             }
+        },
+        updateAvailableMonths() {
+            const monthsInYear = new Set();
+
+            // Filtra meses disponíveis no ano selecionado
+            this.indicadores.forEach(indicador => {
+                if (this.selectedYear === null || indicador.ano === this.selectedYear) {
+                    monthsInYear.add(indicador.mes);
+                }
+            });
+
+            // Atualiza a lista de meses disponíveis com base nos dados
+            this.availableMonths = [...monthsInYear].sort((a, b) => a - b); // Ordena numericamente
         },
         normalizeKeys(obj) {
             return Object.keys(obj).reduce((acc, key) => {
@@ -256,11 +326,11 @@ export default {
                         label: "Rendimento (%)",
                         data: indicadores.map(i => i.rendimento),
                         borderColor: "rgba(75, 192, 192, 1)",
-                        backgroundColor: "rgba(75, 192, 192, 0.2)", // Cor de fundo suave
+                        backgroundColor: "rgba(75, 192, 192, 0.2)",
                         borderWidth: 3,
-                        pointBackgroundColor: "rgba(75, 192, 192, 1)", // Ponto de dados
+                        pointBackgroundColor: "rgba(75, 192, 192, 1)",
                         pointRadius: 5,
-                        fill: true, // Preenchimento suave abaixo da linha
+                        fill: true,
                         tension: 0.4,
                     },
                 ],
@@ -276,9 +346,9 @@ export default {
                         backgroundColor: "rgba(75, 192, 192, 0.7)",
                         borderColor: "rgba(75, 192, 192, 1)",
                         borderWidth: 2,
-                        hoverBackgroundColor: "rgba(75, 192, 192, 1)", // Cor ao passar o mouse
+                        hoverBackgroundColor: "rgba(75, 192, 192, 1)",
                         hoverBorderColor: "rgba(75, 192, 192, 1)",
-                        borderRadius: 5, // Barras arredondadas
+                        borderRadius: 5,
                         barThickness: 50,
                     },
                 ],
@@ -319,8 +389,10 @@ export default {
                         backgroundColor: "rgba(255, 99, 132, 0.7)",
                         borderColor: "rgba(255, 99, 132, 1)",
                         borderWidth: 2,
-                        borderRadius: 5, // Barras arredondadas
-                        barThickness: 30,
+                        hoverBackgroundColor: "rgba(255, 99, 132, 1)",
+                        hoverBorderColor: "rgba(255, 99, 132, 1)",
+                        borderRadius: 5,
+                        barThickness: 50,
                     },
                     {
                         label: "Concentrado (Kg)",
@@ -328,17 +400,26 @@ export default {
                         backgroundColor: "rgba(54, 162, 235, 0.7)",
                         borderColor: "rgba(54, 162, 235, 1)",
                         borderWidth: 2,
-                        borderRadius: 5, // Barras arredondadas
-                        barThickness: 30,
+                        hoverBackgroundColor: "rgba(54, 162, 235, 1)",
+                        hoverBorderColor: "rgba(54, 162, 235, 1)",
+                        borderRadius: 5,
+                        barThickness: 50,
                     },
                 ],
             };
         },
-    },
-    watch: {
-        filtroOrdemSelecionadas() {
+        changeChartType(type) {
+            this.chartType = type;
             this.updateCharts();
         },
+        changeRelationChartType(type) {
+            this.relationChartType = type;
+            this.updateCharts();
+        },
+    },
+    watch: {
+        indicadoresFiltrados: "updateCharts", // Atualiza gráficos quando os indicadores filtrados mudam
+        selectedYear: "updateAvailableMonths", // Atualiza meses disponíveis ao mudar o ano
     },
     mounted() {
         this.fetchData();
@@ -399,21 +480,6 @@ h3 {
     font-size: 1rem;
 }
 
-.clear-filters-btn {
-    margin: 10px;
-    padding: 10px;
-    background-color: white;
-    color: #0056b3;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-.clear-filters-btn:hover {
-    background-color: #4db8ff;
-}
-
 /* Conteúdo principal */
 .main-content {
     margin-left: 280px;
@@ -442,11 +508,28 @@ h2 {
 }
 
 .tab-button {
-    padding: 10px 20px;
+    padding: 5px 10px;
     margin-right: 10px;
     border: none;
     background: #ddd;
     cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.data-filters {
+    padding: 5px 10px;
+    margin-right: 10px;
+    border: none;
+    background: #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.data-filters select {
+    margin: 5px;
+    border: 1px solid #333;
+    background: #ddd;
     border-radius: 5px;
     font-size: 1rem;
 }
