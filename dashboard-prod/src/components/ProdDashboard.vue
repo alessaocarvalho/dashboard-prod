@@ -258,7 +258,7 @@ export default {
                 materiaPrima.forEach(item => {
                     ordemMap[item["Ordem de Produção"]] = {
                         ordem: item["Ordem de Produção"],
-                        data: `${item["Ano"]}-${item["Mês"]}-01`,
+                        data: `${item["Ano"]}-${item["Mês"]}-${item["Dia"]}`,
                         ano: item["Ano"],
                         mes: item["Mês"],
                         materiaPrima: item["Soma de Matéria-prima (Kg)"] || 0,
