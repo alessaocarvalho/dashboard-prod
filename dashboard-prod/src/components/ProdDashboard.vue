@@ -48,13 +48,16 @@
 
                 <!-- Navegação entre abas -->
                 <div class="tabs">
-                    <button :class="{ active: activeTab === 'rendimento' }" @click="activeTab = 'rendimento'" class="tab-button">
+                    <button :class="{ active: activeTab === 'rendimento' }" @click="activeTab = 'rendimento'"
+                        class="tab-button">
                         Comparação de Rendimento (%)
                     </button>
-                    <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'" class="tab-button">
+                    <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'"
+                        class="tab-button">
                         Matéria-prima vs Concentrado
                     </button>
-                    <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'" class="tab-button">
+                    <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'"
+                        class="tab-button">
                         Dados Brutos
                     </button>
                 </div>
@@ -63,8 +66,10 @@
                 <div v-if="activeTab === 'rendimento'" class="chart-container">
                     <h2>Comparação de Rendimento (%)</h2>
                     <div class="chart-toggle">
-                        <button @click="chartType = 'line'" :class="{ active: chartType === 'line' }">Gráfico de Linha</button>
-                        <button @click="chartType = 'bar'" :class="{ active: chartType === 'bar' }">Gráfico de Barras</button>
+                        <button @click="chartType = 'line'" :class="{ active: chartType === 'line' }">Gráfico de
+                            Linha</button>
+                        <button @click="chartType = 'bar'" :class="{ active: chartType === 'bar' }">Gráfico de
+                            Barras</button>
                     </div>
                     <div v-if="chartType === 'line'">
                         <line-chart :data="chartData" />
@@ -77,8 +82,10 @@
                 <div v-if="activeTab === 'relation'" class="chart-container">
                     <h2>Relação Matéria-prima vs Concentrado</h2>
                     <div class="chart-toggle">
-                        <button @click="relationChartType = 'line'" :class="{ active: relationChartType === 'line' }">Gráfico de Linha</button>
-                        <button @click="relationChartType = 'bar'" :class="{ active: relationChartType === 'bar' }">Gráfico de Barras</button>
+                        <button @click="relationChartType = 'line'"
+                            :class="{ active: relationChartType === 'line' }">Gráfico de Linha</button>
+                        <button @click="relationChartType = 'bar'"
+                            :class="{ active: relationChartType === 'bar' }">Gráfico de Barras</button>
                     </div>
                     <div v-if="relationChartType === 'line'">
                         <line-chart :data="relationChartData" />
@@ -94,6 +101,7 @@
                         <thead>
                             <tr>
                                 <th>Ordem de Produção</th>
+                                <th>Data</th>
                                 <th>Matéria-prima (Kg)</th>
                                 <th>Concentrado (Kg)</th>
                                 <th>Rendimento (%)</th>
@@ -102,6 +110,7 @@
                         <tbody>
                             <tr v-for="indicador in indicadoresFiltrados" :key="indicador.ordem">
                                 <td>{{ indicador.ordem }}</td>
+                                <td>{{ formatDate(indicador.data) }}</td>
                                 <td>{{ indicador.materiaPrima }}</td>
                                 <td>{{ indicador.concentrado }}</td>
                                 <td>{{ indicador.rendimento.toFixed(2) }}</td>
@@ -124,6 +133,7 @@ export default {
     data() {
         return {
             indicadores: [], // Lista de dados combinados
+            monthlyData: [],
             chartData: null, // Dados para o gráfico de linha (rendimento)
             barChartData: null, // Dados para o gráfico de barras (rendimento)
             relationChartData: null, // Dados para o gráfico de linha de relação (matéria-prima vs concentrado)
@@ -134,16 +144,26 @@ export default {
             activeTab: "rendimento", // Aba ativa ("rendimento", "relation", ou "rawData")
             chartType: "line", // Tipo de gráfico de rendimento (linha ou barra)
             relationChartType: "line", // Tipo de gráfico de relação (linha ou barra)
+            selectedMonth: null,
+            selectedYear: null,
+            availableYears: [], // Anos disponíveis para o seletor
+            months: [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ],
         };
     },
     computed: {
         indicadoresFiltrados() {
-            if (this.filtroOrdemSelecionadas.length === 0) {
-                return this.indicadores;
+            let indicadoresFiltrados = this.indicadores;
+
+            if (this.filtroOrdemSelecionadas.length > 0) {
+                indicadoresFiltrados = indicadoresFiltrados.filter(indicador =>
+                    this.filtroOrdemSelecionadas.includes(indicador.ordem)
+                );
             }
-            return this.indicadores.filter(indicador =>
-                this.filtroOrdemSelecionadas.includes(indicador.ordem)
-            );
+
+            return indicadoresFiltrados;
         },
         // KPI - Rendimento Médio
         averageRendimento() {
@@ -160,6 +180,13 @@ export default {
         },
     },
     methods: {
+        formatDate(date) {
+            const d = new Date(date);
+            const day = String(d.getDate()).padStart(2, "0");
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        },
         clearFilters() {
             this.filtroOrdemSelecionadas = [];
         },
@@ -181,6 +208,9 @@ export default {
                 materiaPrima.forEach(item => {
                     ordemMap[item["Ordem de Produção"]] = {
                         ordem: item["Ordem de Produção"],
+                        data: `${item["Ano"]}-${item["Mês"]}-01`,
+                        ano: item["Ano"],
+                        mes: item["Mês"],
                         materiaPrima: item["Soma de Matéria-prima (Kg)"] || 0,
                         concentrado: 0,
                     };
