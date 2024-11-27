@@ -27,7 +27,7 @@
                 <div class="kpi-section">
                     <div class="kpi-card">
                         <h3>Ordens de Produção Selecionadas</h3>
-                        <p>{{ filtroOrdemSelecionadas.length }} de {{ indicadores.length }}</p>
+                        <p>{{ filtroOrdemSelecionadas.length }} de {{ filteredOrders.length }}</p>
                     </div>
                     <div class="kpi-card">
                         <h3>Rendimento Médio (%)</h3>
