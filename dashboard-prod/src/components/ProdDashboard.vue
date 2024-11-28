@@ -392,7 +392,7 @@ export default {
                         hoverBackgroundColor: "rgba(255, 99, 132, 1)",
                         hoverBorderColor: "rgba(255, 99, 132, 1)",
                         borderRadius: 5,
-                        barThickness: 50,
+                        barThickness: 30,
                     },
                     {
                         label: "Concentrado (Kg)",
@@ -403,7 +403,7 @@ export default {
                         hoverBackgroundColor: "rgba(54, 162, 235, 1)",
                         hoverBorderColor: "rgba(54, 162, 235, 1)",
                         borderRadius: 5,
-                        barThickness: 50,
+                        barThickness: 30,
                     },
                 ],
             };
