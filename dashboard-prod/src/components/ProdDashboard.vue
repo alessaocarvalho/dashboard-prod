@@ -487,11 +487,8 @@ h3 {
 }
 
 .order-list {
-    margin-bottom: 20px;
     max-height: 300px;
-    /* Altura máxima para rolagem */
     overflow-y: auto;
-    /* Habilita a rolagem vertical */
 }
 
 .sidebar-button {
