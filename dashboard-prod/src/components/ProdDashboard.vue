@@ -481,7 +481,8 @@ h3 {
 }
 
 .data-filters select {
-    border: 1px solid #333;
+    background-color: #ddd;
+    border: none;
     border-radius: 5px;
     font-size: 1rem;
 }
