@@ -1,7 +1,7 @@
 <template>
     <div class="dashboard">
         <header class="dashboard-header">
-            <h1 class="dashboard-title">Dashboard de Produção Nutrilite</h1>
+            <h1 class="dashboard-title">Dashboard de Produção Amway/Nutrilite</h1>
             <p class="dashboard-description">
                 Acompanhe o desempenho da produção com dados atualizados sobre matéria-prima, concentrado e rendimento.
                 Selecione as ordens de produção para analisar e comparar os resultados.
@@ -568,7 +568,7 @@ h2 {
     background: #ddd;
     cursor: pointer;
     border-radius: 5px;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 
 .tab-button.active {
