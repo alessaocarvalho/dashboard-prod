@@ -460,7 +460,7 @@ export default {
     width: 250px;
     float: left;
     margin-top: 10px;
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #4db8ff, #2f4e7d);
     border-radius: 10px;
     color: white;
 }
@@ -570,7 +570,7 @@ h2 {
 }
 
 .tab-button.active {
-    background: #0056b3;
+    background: linear-gradient(135deg, #4db8ff, #2f4e7d);
     color: white;
 }
 
@@ -610,7 +610,7 @@ tr:hover {
 }
 
 .kpi-card {
-    background-color: #f4f4f4;
+    background: linear-gradient(135deg, #dfe7f0, #ddd);
     padding: 10px;
     margin: 20px;
     border-radius: 8px;
@@ -653,7 +653,7 @@ tr:hover {
 }
 
 .chart-toggle button.active {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, #4db8ff, #2f4e7d);
     color: white;
 }
 </style>
