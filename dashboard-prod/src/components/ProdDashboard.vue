@@ -12,13 +12,33 @@
             <!-- Barra de Navegação Lateral -->
             <div class="sidebar">
                 <h3>Ordens de Produção</h3>
-                <p>Selecione para comparar</p>
-                <div class="order-list">
-                    <label v-for="indicador in filteredOrders" :key="indicador.ordem" class="order-item">
-                        <input type="checkbox" :value="indicador.ordem" v-model="filtroOrdemSelecionadas" />
-                        Ordem {{ indicador.ordem }}
-                    </label>
-                </div>
+                <!-- Filtro de Data -->
+                <div class="data-filters">
+                        <label for="year">Ano</label>
+                        <select v-model="selectedYear" @change="applyDateFilter">
+                            <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+                        </select>
+
+                        <label for="month">Mês</label>
+                        <select v-model="selectedMonth" @change="applyDateFilter">
+                            <option v-for="(month, index) in months" :key="index" :value="index + 1">
+                                {{ month }}
+                            </option>
+                        </select>
+                    </div>
+                    <button @click="clearFilters" class="sidebar-button">
+                        Limpar Filtros
+                    </button>
+                <details>
+                    <summary>Mostrar Ordens de Produção</summary>
+                    <p>Selecione para comparar</p>
+                    <div class="order-list">
+                        <label v-for="indicador in filteredOrders" :key="indicador.ordem" class="order-item">
+                            <input type="checkbox" :value="indicador.ordem" v-model="filtroOrdemSelecionadas" />
+                            Ordem {{ indicador.ordem }}
+                        </label>
+                    </div>
+                </details>
             </div>
 
             <!-- Conteúdo principal -->
@@ -51,34 +71,16 @@
                     </button>
                     <button :class="{ active: activeTab === 'relation' }" @click="activeTab = 'relation'"
                         class="tab-button">
-                        Matéria-prima vs Concentrado
+                        Matéria-prima vs Concentrado (Kg)
                     </button>
                     <button :class="{ active: activeTab === 'rawData' }" @click="activeTab = 'rawData'"
                         class="tab-button">
                         Dados Brutos
                     </button>
-                    <!-- Filtro de Data -->
-                    <div class="data-filters">
-                        <label for="year">Ano</label>
-                        <select v-model="selectedYear" @change="applyDateFilter">
-                            <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
-                        </select>
-
-                        <label for="month">Mês</label>
-                        <select v-model="selectedMonth" @change="applyDateFilter">
-                            <option v-for="(month, index) in months" :key="index" :value="index + 1">
-                                {{ month }}
-                            </option>
-                        </select>
-                    </div>
-                    <button @click="clearFilters" class="tab-button">
-                        Limpar Filtros
-                    </button>
                 </div>
 
                 <!-- Conteúdo das abas -->
                 <div v-if="activeTab === 'rendimento'" class="chart-container">
-                    <h2>Comparação de Rendimento (%)</h2>
                     <div class="chart-toggle">
                         <button @click="chartType = 'line'" :class="{ active: chartType === 'line' }">Gráfico de
                             Linha</button>
@@ -94,7 +96,6 @@
                 </div>
 
                 <div v-if="activeTab === 'relation'" class="chart-container">
-                    <h2>Relação Matéria-prima vs Concentrado</h2>
                     <div class="chart-toggle">
                         <button @click="relationChartType = 'line'"
                             :class="{ active: relationChartType === 'line' }">Gráfico de Linha</button>
@@ -110,7 +111,6 @@
                 </div>
 
                 <div v-if="activeTab === 'rawData'" class="raw-data-container">
-                    <h2>Dados Brutos</h2>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -470,14 +470,68 @@ h3 {
     margin: 10px;
 }
 
+.data-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: none;
+    border-radius: 5px;
+    margin: 5px;
+    font-size: 1rem;
+}
+
+.data-filters select {
+    border: 1px solid #333;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
 .order-list {
     margin-bottom: 20px;
+    max-height: 300px;
+    /* Altura máxima para rolagem */
+    overflow-y: auto;
+    /* Habilita a rolagem vertical */
+}
+
+.sidebar-button {
+    margin: 5px;
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    background-color: #ddd;
+}
+
+.sidebar-button:hover {
+    color: white;
+    background-color: #003e7e;
 }
 
 .order-item {
     display: block;
     margin: 8px 0;
     font-size: 1rem;
+}
+
+/* Detalhes - para esconder/mostrar a lista */
+details {
+    margin-bottom: 15px;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+summary {
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+summary:hover {
+    background-color: #003e7e;
 }
 
 /* Conteúdo principal */
@@ -514,24 +568,7 @@ h2 {
     background: #ddd;
     cursor: pointer;
     border-radius: 5px;
-    font-size: 1rem;
-}
-
-.data-filters {
-    padding: 5px 10px;
-    margin-right: 10px;
-    border: none;
-    background: #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
-}
-
-.data-filters select {
-    margin: 5px;
-    border: 1px solid #333;
-    background: #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
+    font-size: 1.5rem;
 }
 
 .tab-button.active {
