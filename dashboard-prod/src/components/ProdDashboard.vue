@@ -607,12 +607,13 @@ tr:hover {
 .kpi-section {
     display: flex;
     justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
 .kpi-card {
     background: linear-gradient(135deg, #dfe7f0, #ddd);
     padding: 10px;
-    margin: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
